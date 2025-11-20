@@ -1,0 +1,616 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Transistor Tester Simulator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    :root {
+      --bg: #020617;
+      --card: #0b1120;
+      --card-soft: #020617;
+      --accent: #22c55e;
+      --danger: #f97373;
+      --border: #1f2937;
+      --text-main: #e5e7eb;
+      --text-muted: #9ca3af;
+      --heading: #facc15;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 16px;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Arial, sans-serif;
+      background: radial-gradient(circle at top, #1e293b 0, #020617 55%, #000 100%);
+      color: var(--text-main);
+    }
+
+    h1, h2, h3 { margin: 0 0 8px 0; }
+
+    .app-wrapper {
+      max-width: 1000px;
+      margin: 0 auto;
+      background: rgba(15, 23, 42, 0.95);
+      border-radius: 18px;
+      border: 1px solid #111827;
+      padding: 18px 16px 24px;
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(8px);
+    }
+
+    .app-header {
+      text-align: center;
+      margin-bottom: 16px;
+    }
+
+    .badge {
+      display: inline-block;
+      font-size: 11px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      background: rgba(15, 118, 110, 0.18);
+      color: #5eead4;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid rgba(45, 212, 191, 0.2);
+      margin-bottom: 4px;
+    }
+
+    .title { font-size: 22px; font-weight: 700; color: #e5e7eb; }
+    .subtitle { font-size: 13px; color: var(--text-muted); }
+
+    .top-actions {
+      margin-top: 6px;
+      display: flex;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .layout {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-top: 12px;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      padding: 14px 12px;
+      flex: 1 1 260px;
+      min-width: 0;
+    }
+
+    label {
+      font-size: 12px; color: var(--text-muted); display: block; margin-bottom: 3px;
+    }
+
+    select {
+      width: 100%;
+      padding: 6px 9px;
+      border-radius: 8px;
+      border: 1px solid #374151;
+      background: var(--card-soft);
+      color: var(--text-main);
+      font-size: 13px;
+      margin-bottom: 8px;
+    }
+
+    button {
+      border: none;
+      cursor: pointer;
+      border-radius: 999px;
+      padding: 7px 14px;
+      font-size: 13px;
+      font-weight: 600;
+      margin-right: 6px;
+      margin-top: 4px;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, #22c55e, #16a34a);
+      color: #022c22;
+    }
+
+    .btn-secondary {
+      background: #111827;
+      color: var(--text-main);
+      border: 1px solid #374151;
+    }
+
+    .btn-print {
+      background: #0f172a;
+      color: #e5e7eb;
+      border: 1px solid #4b5563;
+    }
+
+    .meter-display {
+      font-family: monospace;
+      font-size: 20px;
+      font-weight: 600;
+      color: #facc15;
+      padding: 5px;
+    }
+
+    /* Pins layout with animation */
+    .pins-layout {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      margin-bottom: 6px;
+      background: #020617;
+      border-radius: 10px;
+      padding: 8px 6px;
+      border: 1px solid #111827;
+    }
+
+    .pin {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      color: #9ca3af;
+    }
+
+    .pin-circle {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #4b5563;
+      background: #020617;
+      transition: 0.2s;
+    }
+
+    .pin-pos {
+      border-color: #f97316;
+      box-shadow: 0 0 8px rgba(249, 115, 22, 0.8);
+      animation: pulsePos 0.4s;
+    }
+
+    .pin-neg {
+      border-color: #22d3ee;
+      box-shadow: 0 0 8px rgba(34, 211, 238, 0.8);
+      animation: pulseNeg 0.4s;
+    }
+
+    @keyframes pulsePos {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+
+    @keyframes pulseNeg {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.25); }
+      100% { transform: scale(1); }
+    }
+
+    #feedback {
+      font-size: 12px;
+      white-space: pre-line;
+      margin-top: 8px;
+      padding: 8px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      color: #e5e7eb;
+    }
+
+    /* Simple circuit diagram (SVG box) */
+    .circuit-diagram-box {
+      margin-top: 10px;
+      padding: 8px;
+      border-radius: 10px;
+      background: #020617;
+      border: 1px solid #1f2937;
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .circuit-diagram-box svg {
+      width: 100%;
+      max-width: 220px;
+      display: block;
+      margin: 4px auto;
+    }
+
+    .theory-card {
+      margin-top: 18px;
+      background: #020617;
+      border-radius: 14px;
+      border: 1px solid #1f2937;
+      padding: 14px 12px;
+      font-size: 13px;
+    }
+
+    .theory-card h2 { margin-bottom: 6px; }
+    .theory-card h3 { color: #38bdf8; margin-top: 10px; margin-bottom: 4px; }
+
+    .pill-table {
+      border-collapse: collapse;
+      margin-top: 6px;
+      font-size: 12px;
+    }
+
+    .pill-table th, .pill-table td {
+      border: 1px solid #4b5563;
+      padding: 4px 8px;
+    }
+
+    .pill-table th { background: #111827; }
+
+    @media print {
+      body {
+        background: #ffffff;
+      }
+      .app-wrapper {
+        box-shadow: none;
+        border-radius: 0;
+        background: #ffffff;
+        color: #000000;
+      }
+      .badge, .btn-primary, .btn-secondary, .btn-print, #mode, #pos, #neg {
+        display: none !important;
+      }
+      .theory-card {
+        border: 1px solid #000;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-wrapper" id="printArea">
+    <div class="app-header">
+      <div class="badge">Virtual Electronics Lab • BJT Testing</div>
+      <div class="title">Transistor Tester Simulator</div>
+      <div class="subtitle">
+        Identify transistor type, pinout & faults using virtual multimeter readings.
+      </div>
+
+      <div class="top-actions">
+        <button class="btn-print" onclick="window.print()">Print / Save Scorecard (PDF)</button>
+      </div>
+    </div>
+
+    <div class="layout">
+
+      <!-- LEFT PANEL -->
+      <div class="card">
+        <h3>Multimeter & Probes</h3>
+
+        <!-- Animated pins -->
+        <div class="pins-layout">
+          <div class="pin">
+            <div class="pin-circle" id="pin1"></div>
+            <div>Pin 1</div>
+          </div>
+          <div class="pin">
+            <div class="pin-circle" id="pin2"></div>
+            <div>Pin 2</div>
+          </div>
+          <div class="pin">
+            <div class="pin-circle" id="pin3"></div>
+            <div>Pin 3</div>
+          </div>
+        </div>
+
+        <label>Positive (red) probe</label>
+        <select id="pos">
+          <option value="1">Pin 1</option>
+          <option value="2">Pin 2</option>
+          <option value="3">Pin 3</option>
+        </select>
+
+        <label>Negative (black) probe</label>
+        <select id="neg">
+          <option value="1">Pin 1</option>
+          <option value="2">Pin 2</option>
+          <option value="3">Pin 3</option>
+        </select>
+
+        <button class="btn-primary" onclick="takeReading()">Measure</button>
+        <div class="meter-display" id="reading">--</div>
+
+        <!-- Simple circuit diagram graphic -->
+        <div class="circuit-diagram-box">
+          <div><b>Approximate BJT symbol (for concept)</b></div>
+          <svg viewBox="0 0 200 100">
+            <!-- Circle for transistor body -->
+            <circle cx="100" cy="50" r="18" stroke="#6b7280" fill="none" stroke-width="2"/>
+
+            <!-- Collector line -->
+            <line x1="100" y1="32" x2="100" y2="10" stroke="#9ca3af" stroke-width="2"/>
+            <text x="104" y="15" fill="#9ca3af" font-size="10">C</text>
+
+            <!-- Base line -->
+            <line x1="82" y1="50" x2="55" y2="50" stroke="#9ca3af" stroke-width="2"/>
+            <text x="50" y="54" fill="#9ca3af" font-size="10">B</text>
+
+            <!-- Emitter line -->
+            <line x1="100" y1="68" x2="100" y2="90" stroke="#9ca3af" stroke-width="2"/>
+            <text x="104" y="88" fill="#9ca3af" font-size="10">E</text>
+
+            <!-- Arrow on emitter (NPN style) -->
+            <line x1="100" y1="80" x2="112" y2="92" stroke="#22c55e" stroke-width="2"/>
+            <polygon points="112,92 107,90 110,87" fill="#22c55e"/>
+
+            <!-- Label -->
+            <text x="60" y="12" fill="#6ee7b7" font-size="11">BJT (symbol view)</text>
+          </svg>
+          <div style="margin-top:4px;">
+            Note: Symbol view helps relate pins B, C, E to the 3-pin package.
+          </div>
+        </div>
+      </div>
+
+
+      <!-- RIGHT PANEL -->
+      <div class="card">
+        <h3>Your Guess & Score</h3>
+
+        <label>Mode</label>
+        <select id="mode" onchange="newTransistor()">
+          <option value="normal">Normal (no faults)</option>
+          <option value="hard">Hard (faults enabled)</option>
+        </select>
+
+        <label>Type</label>
+        <select id="typeGuess">
+          <option value="NPN">NPN</option>
+          <option value="PNP">PNP</option>
+        </select>
+
+        <label>Base pin</label>
+        <select id="baseGuess">
+          <option value="1">Pin 1</option>
+          <option value="2">Pin 2</option>
+          <option value="3">Pin 3</option>
+        </select>
+
+        <label>Collector pin</label>
+        <select id="collectorGuess">
+          <option value="1">Pin 1</option>
+          <option value="2">Pin 2</option>
+          <option value="3">Pin 3</option>
+        </select>
+
+        <label>Emitter pin</label>
+        <select id="emitterGuess">
+          <option value="1">Pin 1</option>
+          <option value="2">Pin 2</option>
+          <option value="3">Pin 3</option>
+        </select>
+
+        <label>Fault type (for hard mode)</label>
+        <select id="faultGuess">
+          <option value="none">No fault (OK)</option>
+          <option value="open_base">Open base</option>
+          <option value="short_ce">C–E short</option>
+        </select>
+
+        <button class="btn-primary" onclick="checkAnswer()">Submit Guess</button>
+        <button class="btn-secondary" onclick="newTransistor()">New Transistor</button>
+
+        <h3>Score</h3>
+        <p id="roundScore">Round Score: <span>0</span></p>
+        <p id="totalScore">Total Score: <span>0</span></p>
+
+        <div id="feedback"></div>
+      </div>
+    </div>
+
+
+    <!-- THEORY SECTION -->
+    <div class="theory-card">
+      <h2>📘 THEORY & FAULT ANALYSIS</h2>
+
+      <h3>🔹 Basic Idea</h3>
+      <p>BJT behaves like two diodes joined at the Base.</p>
+      <p><b>NPN:</b> Base positive → conduction from B→C/B→E.<br>
+         <b>PNP:</b> Base negative → conduction from B→C/B→E.</p>
+
+      <h3>🔹 Multimeter (Diode Test) – Healthy</h3>
+      <ul>
+        <li>Forward-biased junction ≈ <b>0.6–0.7 V</b></li>
+        <li>Reverse-biased or open → <b>OL</b></li>
+        <li>Collector–Emitter behaves open → <b>OL</b></li>
+      </ul>
+
+      <table class="pill-table">
+        <tr><th>Type</th><th>Forward Conduction Condition</th></tr>
+        <tr><td>NPN</td><td>Base positive w.r.t. C/E</td></tr>
+        <tr><td>PNP</td><td>Base negative w.r.t. C/E</td></tr>
+      </table>
+
+      <h3>🔹 Identification Strategy (Healthy)</h3>
+      <p>1️⃣ Find the pin that shows diode conduction (≈0.7 V) to both other pins → that pin is <b>Base</b>.<br>
+         2️⃣ If conduction happens when Base is positive → <b>NPN</b>.<br>
+         3️⃣ If conduction happens when Base is negative → <b>PNP</b>.</p>
+
+      <h3>⚠ Fault Analysis (Hard Mode)</h3>
+
+      <p><b>1) Open Base Fault</b></p>
+      <ul>
+        <li>Base–Emitter and Base–Collector junctions are broken.</li>
+        <li>Any measurement involving B gives <b>OL</b>.</li>
+        <li>C–E still behaves as open (<b>OL</b>).</li>
+        <li>No pin behaves like a proper Base → strong sign of open-base fault.</li>
+      </ul>
+
+      <p><b>2) Collector–Emitter (C–E) Short</b></p>
+      <ul>
+        <li>Internally C and E are shorted (like a wire).</li>
+        <li>Between C and E you see ≈ <b>0.00 V</b> in both directions.</li>
+        <li>Transistor cannot block current → behaves as a permanent short.</li>
+      </ul>
+
+      <h3>📊 Quick Comparison</h3>
+      <table class="pill-table">
+        <tr>
+          <th>Condition</th>
+          <th>B–C / B–E</th>
+          <th>C–E</th>
+          <th>Key Symptom</th>
+        </tr>
+        <tr>
+          <td>Healthy</td>
+          <td>0.7 V in one direction, OL in reverse</td>
+          <td>OL</td>
+          <td>Base clearly identifiable</td>
+        </tr>
+        <tr>
+          <td>Open Base</td>
+          <td>OL everywhere involving B</td>
+          <td>OL</td>
+          <td>Base cannot be identified</td>
+        </tr>
+        <tr>
+          <td>C–E Short</td>
+          <td>May look normal or odd</td>
+          <td>0.00 V both ways</td>
+          <td>Permanent short between C and E</td>
+        </tr>
+      </table>
+
+      <p style="font-size:11px; color:#9ca3af; margin-top:6px;">
+        This simulator mimics multimeter diode-test behaviour for both healthy and faulty BJTs,
+        and can be directly linked to your practical on transistor identification and fault finding.
+      </p>
+    </div>
+  </div>
+
+
+  <!-- JAVASCRIPT LOGIC -->
+  <script>
+    let t = {};
+    let totalScore = 0;
+
+    function newTransistor() {
+      const mode = document.getElementById("mode").value;
+      const pins = [1, 2, 3].sort(() => Math.random() - 0.5);
+
+      let fault = "none";
+      if (mode === "hard") {
+        const faultOptions = ["none", "open_base", "short_ce"];
+        fault = faultOptions[Math.floor(Math.random() * faultOptions.length)];
+      }
+
+      t = {
+        type: Math.random() < 0.5 ? "NPN" : "PNP",
+        base: pins[0],
+        collector: pins[1],
+        emitter: pins[2],
+        fault: fault
+      };
+
+      document.getElementById("reading").textContent = "--";
+      document.getElementById("feedback").textContent = "";
+      document.getElementById("roundScore").querySelector("span").textContent = "0";
+
+      // clear pin highlights
+      clearPinHighlights();
+
+      console.log("Hidden transistor:", t); // for testing / viva
+    }
+
+    function role(pin) {
+      if (pin === t.base) return "B";
+      if (pin === t.collector) return "C";
+      if (pin === t.emitter) return "E";
+    }
+
+    function clearPinHighlights() {
+      for (let i = 1; i <= 3; i++) {
+        const el = document.getElementById("pin" + i);
+        el.classList.remove("pin-pos");
+        el.classList.remove("pin-neg");
+      }
+    }
+
+    function animatePins(pos, neg) {
+      clearPinHighlights();
+      const posEl = document.getElementById("pin" + pos);
+      const negEl = document.getElementById("pin" + neg);
+      if (posEl) posEl.classList.add("pin-pos");
+      if (negEl) negEl.classList.add("pin-neg");
+    }
+
+    function takeReading() {
+      const pos = Number(document.getElementById("pos").value);
+      const neg = Number(document.getElementById("neg").value);
+
+      animatePins(pos, neg);
+
+      const posR = role(pos);
+      const negR = role(neg);
+      let result = "OL";
+
+      // same pin
+      if (pos === neg) {
+        result = "0.00 (same pin)";
+      }
+      // FAULT: C–E short
+      else if (
+        t.fault === "short_ce" &&
+        ((posR === "C" && negR === "E") || (posR === "E" && negR === "C"))
+      ) {
+        result = "0.00 V";
+      }
+      // FAULT: open base
+      else if (t.fault === "open_base" && (posR === "B" || negR === "B")) {
+        result = "OL";
+      }
+      // normal behaviour
+      else {
+        if (t.type === "NPN" && posR === "B" && (negR === "C" || negR === "E")) {
+          result = "0.70 V";
+        }
+        if (t.type === "PNP" && negR === "B" && (posR === "C" || posR === "E")) {
+          result = "0.70 V";
+        }
+      }
+
+      document.getElementById("reading").textContent = result;
+    }
+
+    function checkAnswer() {
+      let score = 0;
+      let msg = "";
+
+      const gType  = document.getElementById("typeGuess").value;
+      const gBase  = Number(document.getElementById("baseGuess").value);
+      const gCol   = Number(document.getElementById("collectorGuess").value);
+      const gEmi   = Number(document.getElementById("emitterGuess").value);
+      const gFault = document.getElementById("faultGuess").value;
+
+      if (gType === t.type) score += 20;
+      else msg += "Wrong TYPE.\n";
+
+      if (gBase === t.base) score += 20;
+      else msg += "Wrong BASE.\n";
+
+      if (gCol === t.collector && gEmi === t.emitter) score += 40;
+      else msg += "Wrong COLLECTOR/EMITTER.\n";
+
+      if (gFault === t.fault) score += 20;
+      else msg += "Wrong FAULT type.\n";
+
+      totalScore += score;
+
+      document.getElementById("roundScore").querySelector("span").textContent = score;
+      document.getElementById("totalScore").querySelector("span").textContent = totalScore;
+
+      msg += `\nCorrect: type=${t.type}, B=${t.base}, C=${t.collector}, E=${t.emitter}, fault=${t.fault}`;
+      document.getElementById("feedback").textContent = msg;
+    }
+
+    // start first transistor
+    newTransistor();
+  </script>
+
+</body>
+</html>
