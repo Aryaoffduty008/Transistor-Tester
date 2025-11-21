@@ -300,12 +300,12 @@
       <div class="landing-meta">
         <b>Mini Project:</b> Transistor Tester Simulator (BJT Identification & Fault Analysis)
         <br>
-        <b>Student:</b> Arya & Team &nbsp;|&nbsp; <b>Course:</b> Diploma / Degree in Electronics / Electrical
+        <b>Group:</b> F3-4 (Shock Squad) &nbsp;|&nbsp; <b>Course:</b> FY B.Tech ENTC
       </div>
       <p>
         This simulator models a laboratory experiment where a Bipolar Junction Transistor (BJT)
         is tested using a multimeter in diode mode. The user places virtual probes on pins,
-        observes readings (0.70 V / OL / short), and then identifies:
+        observes readings (0.65 V / 0.68 V / OL / short), and then identifies:
       </p>
       <ul style="margin-top:4px; padding-left:18px;">
         <li>Transistor type: NPN or PNP</li>
@@ -455,7 +455,8 @@
 
         <h3>🔹 Multimeter (Diode Test) – Healthy</h3>
         <ul>
-          <li>Forward-biased junction ≈ <b>0.6–0.7 V</b></li>
+          <li>Base–Emitter forward drop ≈ <b>0.65 V</b></li>
+          <li>Base–Collector forward drop ≈ <b>0.68 V</b></li>
           <li>Reverse-biased or open → <b>OL</b></li>
           <li>Collector–Emitter behaves open → <b>OL</b></li>
         </ul>
@@ -467,9 +468,11 @@
         </table>
 
         <h3>🔹 Identification Strategy (Healthy)</h3>
-        <p>1️⃣ Find the pin that shows diode conduction (≈0.7 V) to both other pins → that pin is <b>Base</b>.<br>
+        <p>1️⃣ Find the pin that shows diode conduction to both other pins → that pin is <b>Base</b>.<br>
            2️⃣ If conduction happens when Base is positive → <b>NPN</b>.<br>
-           3️⃣ If conduction happens when Base is negative → <b>PNP</b>.</p>
+           3️⃣ If conduction happens when Base is negative → <b>PNP</b>.<br>
+           4️⃣ Compare the two forward drops:
+              smaller (~0.65 V) → <b>B–E</b>, slightly higher (~0.68 V) → <b>B–C</b>.</p>
 
         <h3>⚠ Fault Analysis (Hard Mode)</h3>
 
@@ -498,9 +501,9 @@
           </tr>
           <tr>
             <td>Healthy</td>
-            <td>0.7 V one way, OL reverse</td>
+            <td>B–E ≈ 0.65 V<br>B–C ≈ 0.68 V</td>
             <td>OL</td>
-            <td>Base clearly identifiable</td>
+            <td>Base clearly identifiable + C/E distinguishable by V<sub>F</sub></td>
           </tr>
           <tr>
             <td>Open Base</td>
@@ -550,8 +553,8 @@
           <li>When the user selects positive and negative probe pins, the simulator:
             <ul>
               <li>Maps pin numbers to B/C/E internally.</li>
-              <li>Applies diode-test rules to calculate the expected reading.</li>
-              <li>Displays 0.70 V, OL or 0.00 V depending on type and fault.</li>
+              <li>Applies diode-test rules (including 0.65/0.68 V drops) to calculate the reading.</li>
+              <li>Displays 0.65 V, 0.68 V, OL or 0.00 V depending on type and fault.</li>
             </ul>
           </li>
           <li>From multiple readings, the user guesses type, base, collector, emitter and fault.</li>
@@ -569,7 +572,10 @@
             <ul>
               <li>if C–E short fault → show 0.00 V for C–E pair, both directions</li>
               <li>else if open-base fault and B involved → show OL</li>
-              <li>else apply normal NPN/PNP diode-test rule</li>
+              <li>else apply normal NPN/PNP diode-test rule with:
+                <br>• B–E ≈ 0.65 V
+                <br>• B–C ≈ 0.68 V
+              </li>
             </ul>
           </li>
           <li>Display reading on virtual meter.</li>
@@ -581,8 +587,8 @@
         <h3>6. Result</h3>
         <p>
           The developed simulator successfully reproduces diode-test readings for both healthy
-          and faulty BJTs. Users can correctly identify the transistor type and pin configuration
-          by logical probing, and can also detect open-base and C–E short faults in hard mode.
+          and faulty BJTs. Users can correctly identify transistor type, base, collector and
+          emitter, and can also detect open-base and C–E short faults in hard mode.
         </p>
 
         <h3>7. Advantages</h3>
@@ -630,7 +636,6 @@
       const sim = document.getElementById("simContainer");
       sim.style.display = "block";
       sim.scrollIntoView({ behavior: "smooth" });
-      // ensure a transistor is ready
       if (!window._simInit) {
         newTransistor();
         window._simInit = true;
@@ -714,6 +719,9 @@
       const negR = role(neg);
       let result = "OL";
 
+      const VF_BE = "0.65 V";
+      const VF_BC = "0.68 V";
+
       if (pos === neg) {
         result = "0.00 (same pin)";
       } else if (
@@ -724,11 +732,13 @@
       } else if (t.fault === "open_base" && (posR === "B" || negR === "B")) {
         result = "OL";
       } else {
-        if (t.type === "NPN" && posR === "B" && (negR === "C" || negR === "E")) {
-          result = "0.70 V";
+        if (t.type === "NPN" && posR === "B") {
+          if (negR === "E") result = VF_BE;
+          else if (negR === "C") result = VF_BC;
         }
-        if (t.type === "PNP" && negR === "B" && (posR === "C" || posR === "E")) {
-          result = "0.70 V";
+        if (t.type === "PNP" && negR === "B") {
+          if (posR === "E") result = VF_BE;
+          else if (posR === "C") result = VF_BC;
         }
       }
 
@@ -781,4 +791,3 @@
 
 </body>
 </html>
-
