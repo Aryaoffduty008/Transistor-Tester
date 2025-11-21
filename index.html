@@ -41,7 +41,7 @@
 
     .app-header {
       text-align: center;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
 
     .badge {
@@ -60,10 +60,26 @@
     .title { font-size: 22px; font-weight: 700; color: #e5e7eb; }
     .subtitle { font-size: 13px; color: var(--text-muted); }
 
-    .top-actions {
-      margin-top: 6px;
+    .landing-intro {
+      margin-top: 10px;
+      margin-bottom: 16px;
+      background: #020617;
+      border-radius: 16px;
+      border: 1px solid #1f2937;
+      padding: 12px 12px 14px;
+      font-size: 13px;
+    }
+
+    .landing-meta {
+      color: var(--text-muted);
+      font-size: 12px;
+      margin-bottom: 6px;
+    }
+
+    .landing-buttons {
+      margin-top: 8px;
       display: flex;
-      justify-content: center;
+      flex-wrap: wrap;
       gap: 8px;
     }
 
@@ -134,6 +150,13 @@
       padding: 5px;
     }
 
+    .top-actions {
+      margin: 4px 0 8px;
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+    }
+
     /* Pins layout with animation */
     .pins-layout {
       display: flex;
@@ -199,7 +222,6 @@
       color: #e5e7eb;
     }
 
-    /* Simple circuit diagram (SVG box) */
     .circuit-diagram-box {
       margin-top: 10px;
       padding: 8px;
@@ -217,7 +239,7 @@
       margin: 4px auto;
     }
 
-    .theory-card {
+    .theory-card, .report-card {
       margin-top: 18px;
       background: #020617;
       border-radius: 14px;
@@ -226,8 +248,8 @@
       font-size: 13px;
     }
 
-    .theory-card h2 { margin-bottom: 6px; }
-    .theory-card h3 { color: #38bdf8; margin-top: 10px; margin-bottom: 4px; }
+    .theory-card h2, .report-card h2 { margin-bottom: 6px; }
+    .theory-card h3, .report-card h3 { color: #38bdf8; margin-top: 10px; margin-bottom: 4px; }
 
     .pill-table {
       border-collapse: collapse;
@@ -252,10 +274,10 @@
         background: #ffffff;
         color: #000000;
       }
-      .badge, .btn-primary, .btn-secondary, .btn-print, #mode, #pos, #neg {
+      .badge, .btn-primary, .btn-secondary, .btn-print, .landing-intro {
         display: none !important;
       }
-      .theory-card {
+      .theory-card, .report-card {
         border: 1px solid #000;
       }
     }
@@ -264,230 +286,367 @@
 <body>
 
   <div class="app-wrapper" id="printArea">
+    <!-- HEADER -->
     <div class="app-header">
       <div class="badge">Virtual Electronics Lab • BJT Testing</div>
       <div class="title">Transistor Tester Simulator</div>
       <div class="subtitle">
-        Identify transistor type, pinout & faults using virtual multimeter readings.
+        Interactive tool to identify transistor type, pinout & faults using virtual multimeter readings.
       </div>
+    </div>
+
+    <!-- LANDING / INTRO -->
+    <div class="landing-intro">
+      <div class="landing-meta">
+        <b>Mini Project:</b> Transistor Tester Simulator (BJT Identification & Fault Analysis)
+        <br>
+        <b>Student:</b> Arya & Team &nbsp;|&nbsp; <b>Course:</b> Diploma / Degree in Electronics / Electrical
+      </div>
+      <p>
+        This simulator models a laboratory experiment where a Bipolar Junction Transistor (BJT)
+        is tested using a multimeter in diode mode. The user places virtual probes on pins,
+        observes readings (0.70 V / OL / short), and then identifies:
+      </p>
+      <ul style="margin-top:4px; padding-left:18px;">
+        <li>Transistor type: NPN or PNP</li>
+        <li>Base, Collector, Emitter pins</li>
+        <li>Presence of common faults (open base, C–E short) in hard mode</li>
+      </ul>
+      <div class="landing-buttons">
+        <button class="btn-primary" onclick="startSimulation()">▶ Start Simulation</button>
+        <button class="btn-secondary" onclick="openReport()">📄 View Project Report</button>
+        <button class="btn-print" onclick="window.print()">🖨 Print / Save as PDF</button>
+      </div>
+    </div>
+
+    <!-- SIMULATOR + THEORY + REPORT -->
+    <div id="simContainer" style="display:none; margin-top:6px;">
 
       <div class="top-actions">
         <button class="btn-print" onclick="window.print()">Print / Save Scorecard (PDF)</button>
       </div>
-    </div>
 
-    <div class="layout">
+      <div class="layout">
+        <!-- LEFT PANEL -->
+        <div class="card">
+          <h3>Multimeter & Probes</h3>
 
-      <!-- LEFT PANEL -->
-      <div class="card">
-        <h3>Multimeter & Probes</h3>
-
-        <!-- Animated pins -->
-        <div class="pins-layout">
-          <div class="pin">
-            <div class="pin-circle" id="pin1"></div>
-            <div>Pin 1</div>
+          <!-- Animated pins -->
+          <div class="pins-layout">
+            <div class="pin">
+              <div class="pin-circle" id="pin1"></div>
+              <div>Pin 1</div>
+            </div>
+            <div class="pin">
+              <div class="pin-circle" id="pin2"></div>
+              <div>Pin 2</div>
+            </div>
+            <div class="pin">
+              <div class="pin-circle" id="pin3"></div>
+              <div>Pin 3</div>
+            </div>
           </div>
-          <div class="pin">
-            <div class="pin-circle" id="pin2"></div>
-            <div>Pin 2</div>
-          </div>
-          <div class="pin">
-            <div class="pin-circle" id="pin3"></div>
-            <div>Pin 3</div>
+
+          <label>Positive (red) probe</label>
+          <select id="pos">
+            <option value="1">Pin 1</option>
+            <option value="2">Pin 2</option>
+            <option value="3">Pin 3</option>
+          </select>
+
+          <label>Negative (black) probe</label>
+          <select id="neg">
+            <option value="1">Pin 1</option>
+            <option value="2">Pin 2</option>
+            <option value="3">Pin 3</option>
+          </select>
+
+          <button class="btn-primary" onclick="takeReading()">Measure</button>
+          <div class="meter-display" id="reading">--</div>
+
+          <!-- Simple circuit diagram graphic -->
+          <div class="circuit-diagram-box">
+            <div><b>Approximate BJT symbol (for concept)</b></div>
+            <svg viewBox="0 0 200 100">
+              <!-- Circle for transistor body -->
+              <circle cx="100" cy="50" r="18" stroke="#6b7280" fill="none" stroke-width="2"/>
+              <!-- Collector line -->
+              <line x1="100" y1="32" x2="100" y2="10" stroke="#9ca3af" stroke-width="2"/>
+              <text x="104" y="15" fill="#9ca3af" font-size="10">C</text>
+              <!-- Base line -->
+              <line x1="82" y1="50" x2="55" y2="50" stroke="#9ca3af" stroke-width="2"/>
+              <text x="50" y="54" fill="#9ca3af" font-size="10">B</text>
+              <!-- Emitter line -->
+              <line x1="100" y1="68" x2="100" y2="90" stroke="#9ca3af" stroke-width="2"/>
+              <text x="104" y="88" fill="#9ca3af" font-size="10">E</text>
+              <!-- Arrow on emitter (NPN style) -->
+              <line x1="100" y1="80" x2="112" y2="92" stroke="#22c55e" stroke-width="2"/>
+              <polygon points="112,92 107,90 110,87" fill="#22c55e"/>
+            </svg>
+            <div style="margin-top:4px;">
+              Note: Symbol helps relate pins B, C, E to the 3-pin package.
+            </div>
           </div>
         </div>
 
-        <label>Positive (red) probe</label>
-        <select id="pos">
-          <option value="1">Pin 1</option>
-          <option value="2">Pin 2</option>
-          <option value="3">Pin 3</option>
-        </select>
+        <!-- RIGHT PANEL -->
+        <div class="card">
+          <h3>Your Guess & Score</h3>
 
-        <label>Negative (black) probe</label>
-        <select id="neg">
-          <option value="1">Pin 1</option>
-          <option value="2">Pin 2</option>
-          <option value="3">Pin 3</option>
-        </select>
+          <label>Mode</label>
+          <select id="mode" onchange="newTransistor()">
+            <option value="normal">Normal (no faults)</option>
+            <option value="hard">Hard (faults enabled)</option>
+          </select>
 
-        <button class="btn-primary" onclick="takeReading()">Measure</button>
-        <div class="meter-display" id="reading">--</div>
+          <label>Type</label>
+          <select id="typeGuess">
+            <option value="NPN">NPN</option>
+            <option value="PNP">PNP</option>
+          </select>
 
-        <!-- Simple circuit diagram graphic -->
-        <div class="circuit-diagram-box">
-          <div><b>Approximate BJT symbol (for concept)</b></div>
-          <svg viewBox="0 0 200 100">
-            <!-- Circle for transistor body -->
-            <circle cx="100" cy="50" r="18" stroke="#6b7280" fill="none" stroke-width="2"/>
+          <label>Base pin</label>
+          <select id="baseGuess">
+            <option value="1">Pin 1</option>
+            <option value="2">Pin 2</option>
+            <option value="3">Pin 3</option>
+          </select>
 
-            <!-- Collector line -->
-            <line x1="100" y1="32" x2="100" y2="10" stroke="#9ca3af" stroke-width="2"/>
-            <text x="104" y="15" fill="#9ca3af" font-size="10">C</text>
+          <label>Collector pin</label>
+          <select id="collectorGuess">
+            <option value="1">Pin 1</option>
+            <option value="2">Pin 2</option>
+            <option value="3">Pin 3</option>
+          </select>
 
-            <!-- Base line -->
-            <line x1="82" y1="50" x2="55" y2="50" stroke="#9ca3af" stroke-width="2"/>
-            <text x="50" y="54" fill="#9ca3af" font-size="10">B</text>
+          <label>Emitter pin</label>
+          <select id="emitterGuess">
+            <option value="1">Pin 1</option>
+            <option value="2">Pin 2</option>
+            <option value="3">Pin 3</option>
+          </select>
 
-            <!-- Emitter line -->
-            <line x1="100" y1="68" x2="100" y2="90" stroke="#9ca3af" stroke-width="2"/>
-            <text x="104" y="88" fill="#9ca3af" font-size="10">E</text>
+          <label>Fault type (for hard mode)</label>
+          <select id="faultGuess">
+            <option value="none">No fault (OK)</option>
+            <option value="open_base">Open base</option>
+            <option value="short_ce">C–E short</option>
+          </select>
 
-            <!-- Arrow on emitter (NPN style) -->
-            <line x1="100" y1="80" x2="112" y2="92" stroke="#22c55e" stroke-width="2"/>
-            <polygon points="112,92 107,90 110,87" fill="#22c55e"/>
+          <button class="btn-primary" onclick="checkAnswer()">Submit Guess</button>
+          <button class="btn-secondary" onclick="newTransistor()">New Transistor</button>
 
-            <!-- Label -->
-            <text x="60" y="12" fill="#6ee7b7" font-size="11">BJT (symbol view)</text>
-          </svg>
-          <div style="margin-top:4px;">
-            Note: Symbol view helps relate pins B, C, E to the 3-pin package.
-          </div>
+          <h3>Score</h3>
+          <p id="roundScore">Round Score: <span>0</span></p>
+          <p id="totalScore">Total Score: <span>0</span></p>
+
+          <div id="feedback"></div>
         </div>
       </div>
 
+      <!-- THEORY SECTION -->
+      <div class="theory-card">
+        <h2>📘 THEORY & FAULT ANALYSIS</h2>
 
-      <!-- RIGHT PANEL -->
-      <div class="card">
-        <h3>Your Guess & Score</h3>
+        <h3>🔹 Basic Idea</h3>
+        <p>BJT behaves like two diodes joined at the Base.</p>
+        <p><b>NPN:</b> Base positive → conduction from B→C / B→E.<br>
+           <b>PNP:</b> Base negative → conduction from B→C / B→E.</p>
 
-        <label>Mode</label>
-        <select id="mode" onchange="newTransistor()">
-          <option value="normal">Normal (no faults)</option>
-          <option value="hard">Hard (faults enabled)</option>
-        </select>
+        <h3>🔹 Multimeter (Diode Test) – Healthy</h3>
+        <ul>
+          <li>Forward-biased junction ≈ <b>0.6–0.7 V</b></li>
+          <li>Reverse-biased or open → <b>OL</b></li>
+          <li>Collector–Emitter behaves open → <b>OL</b></li>
+        </ul>
 
-        <label>Type</label>
-        <select id="typeGuess">
-          <option value="NPN">NPN</option>
-          <option value="PNP">PNP</option>
-        </select>
+        <table class="pill-table">
+          <tr><th>Type</th><th>Forward Conduction Condition</th></tr>
+          <tr><td>NPN</td><td>Base positive w.r.t. C/E</td></tr>
+          <tr><td>PNP</td><td>Base negative w.r.t. C/E</td></tr>
+        </table>
 
-        <label>Base pin</label>
-        <select id="baseGuess">
-          <option value="1">Pin 1</option>
-          <option value="2">Pin 2</option>
-          <option value="3">Pin 3</option>
-        </select>
+        <h3>🔹 Identification Strategy (Healthy)</h3>
+        <p>1️⃣ Find the pin that shows diode conduction (≈0.7 V) to both other pins → that pin is <b>Base</b>.<br>
+           2️⃣ If conduction happens when Base is positive → <b>NPN</b>.<br>
+           3️⃣ If conduction happens when Base is negative → <b>PNP</b>.</p>
 
-        <label>Collector pin</label>
-        <select id="collectorGuess">
-          <option value="1">Pin 1</option>
-          <option value="2">Pin 2</option>
-          <option value="3">Pin 3</option>
-        </select>
+        <h3>⚠ Fault Analysis (Hard Mode)</h3>
 
-        <label>Emitter pin</label>
-        <select id="emitterGuess">
-          <option value="1">Pin 1</option>
-          <option value="2">Pin 2</option>
-          <option value="3">Pin 3</option>
-        </select>
+        <p><b>1) Open Base Fault</b></p>
+        <ul>
+          <li>Base–Emitter and Base–Collector junctions are broken.</li>
+          <li>Any measurement involving B gives <b>OL</b>.</li>
+          <li>C–E still behaves as open (<b>OL</b>).</li>
+          <li>No pin behaves like a proper Base → strong sign of open-base fault.</li>
+        </ul>
 
-        <label>Fault type (for hard mode)</label>
-        <select id="faultGuess">
-          <option value="none">No fault (OK)</option>
-          <option value="open_base">Open base</option>
-          <option value="short_ce">C–E short</option>
-        </select>
+        <p><b>2) Collector–Emitter (C–E) Short</b></p>
+        <ul>
+          <li>Internally C and E are shorted (like a wire).</li>
+          <li>Between C and E you see ≈ <b>0.00 V</b> in both directions.</li>
+          <li>Transistor cannot block current → behaves as permanent short.</li>
+        </ul>
 
-        <button class="btn-primary" onclick="checkAnswer()">Submit Guess</button>
-        <button class="btn-secondary" onclick="newTransistor()">New Transistor</button>
-
-        <h3>Score</h3>
-        <p id="roundScore">Round Score: <span>0</span></p>
-        <p id="totalScore">Total Score: <span>0</span></p>
-
-        <div id="feedback"></div>
+        <h3>📊 Quick Comparison</h3>
+        <table class="pill-table">
+          <tr>
+            <th>Condition</th>
+            <th>B–C / B–E</th>
+            <th>C–E</th>
+            <th>Key Symptom</th>
+          </tr>
+          <tr>
+            <td>Healthy</td>
+            <td>0.7 V one way, OL reverse</td>
+            <td>OL</td>
+            <td>Base clearly identifiable</td>
+          </tr>
+          <tr>
+            <td>Open Base</td>
+            <td>OL everywhere involving B</td>
+            <td>OL</td>
+            <td>Base cannot be identified</td>
+          </tr>
+          <tr>
+            <td>C–E Short</td>
+            <td>May look normal or odd</td>
+            <td>0.00 V both ways</td>
+            <td>Permanent short between C and E</td>
+          </tr>
+        </table>
       </div>
-    </div>
 
+      <!-- PROJECT REPORT SECTION -->
+      <div class="report-card" id="report">
+        <h2>📄 Project Report (Embedded Summary)</h2>
 
-    <!-- THEORY SECTION -->
-    <div class="theory-card">
-      <h2>📘 THEORY & FAULT ANALYSIS</h2>
+        <h3>1. Aim</h3>
+        <p>
+          To design and implement a web-based Transistor Tester Simulator that uses
+          virtual multimeter readings to identify the type (NPN/PNP), terminals
+          (Base, Collector, Emitter) and common faults (open base, C–E short) of a BJT.
+        </p>
 
-      <h3>🔹 Basic Idea</h3>
-      <p>BJT behaves like two diodes joined at the Base.</p>
-      <p><b>NPN:</b> Base positive → conduction from B→C/B→E.<br>
-         <b>PNP:</b> Base negative → conduction from B→C/B→E.</p>
+        <h3>2. Objectives</h3>
+        <ul>
+          <li>To simulate multimeter diode-test behaviour for BJTs.</li>
+          <li>To help students learn transistor identification through an interactive game.</li>
+          <li>To include realistic fault conditions for troubleshooting practice.</li>
+          <li>To provide on-screen theory and explanations suitable for viva and exams.</li>
+        </ul>
 
-      <h3>🔹 Multimeter (Diode Test) – Healthy</h3>
-      <ul>
-        <li>Forward-biased junction ≈ <b>0.6–0.7 V</b></li>
-        <li>Reverse-biased or open → <b>OL</b></li>
-        <li>Collector–Emitter behaves open → <b>OL</b></li>
-      </ul>
+        <h3>3. Tools & Platform</h3>
+        <ul>
+          <li>Front-end: HTML, CSS, JavaScript</li>
+          <li>Hosting: GitHub Pages</li>
+          <li>Test environment: Any modern web browser (Chrome / Edge / Firefox)</li>
+        </ul>
 
-      <table class="pill-table">
-        <tr><th>Type</th><th>Forward Conduction Condition</th></tr>
-        <tr><td>NPN</td><td>Base positive w.r.t. C/E</td></tr>
-        <tr><td>PNP</td><td>Base negative w.r.t. C/E</td></tr>
-      </table>
+        <h3>4. Methodology / Working</h3>
+        <ol>
+          <li>The program randomly generates a BJT as NPN or PNP with random B, C, E pin assignment.</li>
+          <li>In hard mode, a fault may also be applied (open base or C–E short).</li>
+          <li>When the user selects positive and negative probe pins, the simulator:
+            <ul>
+              <li>Maps pin numbers to B/C/E internally.</li>
+              <li>Applies diode-test rules to calculate the expected reading.</li>
+              <li>Displays 0.70 V, OL or 0.00 V depending on type and fault.</li>
+            </ul>
+          </li>
+          <li>From multiple readings, the user guesses type, base, collector, emitter and fault.</li>
+          <li>The simulator checks the guess and awards marks for each correct part.</li>
+        </ol>
 
-      <h3>🔹 Identification Strategy (Healthy)</h3>
-      <p>1️⃣ Find the pin that shows diode conduction (≈0.7 V) to both other pins → that pin is <b>Base</b>.<br>
-         2️⃣ If conduction happens when Base is positive → <b>NPN</b>.<br>
-         3️⃣ If conduction happens when Base is negative → <b>PNP</b>.</p>
+        <h3>5. Algorithm (High-Level)</h3>
+        <ol>
+          <li>Start</li>
+          <li>Randomly choose transistor type (NPN/PNP).</li>
+          <li>Randomly assign pins 1, 2, 3 as B, C, E.</li>
+          <li>If hard mode: randomly select fault type (none / open_base / short_ce).</li>
+          <li>Wait for user probe selection (positive pin, negative pin).</li>
+          <li>Determine pin roles (B/C/E) and check:
+            <ul>
+              <li>if C–E short fault → show 0.00 V for C–E pair, both directions</li>
+              <li>else if open-base fault and B involved → show OL</li>
+              <li>else apply normal NPN/PNP diode-test rule</li>
+            </ul>
+          </li>
+          <li>Display reading on virtual meter.</li>
+          <li>After user submits guess → compare with actual values and compute score.</li>
+          <li>Display result and allow new transistor generation.</li>
+          <li>End</li>
+        </ol>
 
-      <h3>⚠ Fault Analysis (Hard Mode)</h3>
+        <h3>6. Result</h3>
+        <p>
+          The developed simulator successfully reproduces diode-test readings for both healthy
+          and faulty BJTs. Users can correctly identify the transistor type and pin configuration
+          by logical probing, and can also detect open-base and C–E short faults in hard mode.
+        </p>
 
-      <p><b>1) Open Base Fault</b></p>
-      <ul>
-        <li>Base–Emitter and Base–Collector junctions are broken.</li>
-        <li>Any measurement involving B gives <b>OL</b>.</li>
-        <li>C–E still behaves as open (<b>OL</b>).</li>
-        <li>No pin behaves like a proper Base → strong sign of open-base fault.</li>
-      </ul>
+        <h3>7. Advantages</h3>
+        <ul>
+          <li>No physical hardware required – runs in any web browser.</li>
+          <li>Safe environment to practice without risk of damaging components.</li>
+          <li>Supports both conceptual learning and fault-finding skills.</li>
+          <li>Can be used as a demonstration tool in labs, online classes and viva.</li>
+        </ul>
 
-      <p><b>2) Collector–Emitter (C–E) Short</b></p>
-      <ul>
-        <li>Internally C and E are shorted (like a wire).</li>
-        <li>Between C and E you see ≈ <b>0.00 V</b> in both directions.</li>
-        <li>Transistor cannot block current → behaves as a permanent short.</li>
-      </ul>
+        <h3>8. Applications</h3>
+        <ul>
+          <li>Electronics / Electrical lab demonstration for BJT testing.</li>
+          <li>Self-learning tool for students preparing for practical exams.</li>
+          <li>Teaching aid for explaining multimeter diode mode behaviour.</li>
+        </ul>
 
-      <h3>📊 Quick Comparison</h3>
-      <table class="pill-table">
-        <tr>
-          <th>Condition</th>
-          <th>B–C / B–E</th>
-          <th>C–E</th>
-          <th>Key Symptom</th>
-        </tr>
-        <tr>
-          <td>Healthy</td>
-          <td>0.7 V in one direction, OL in reverse</td>
-          <td>OL</td>
-          <td>Base clearly identifiable</td>
-        </tr>
-        <tr>
-          <td>Open Base</td>
-          <td>OL everywhere involving B</td>
-          <td>OL</td>
-          <td>Base cannot be identified</td>
-        </tr>
-        <tr>
-          <td>C–E Short</td>
-          <td>May look normal or odd</td>
-          <td>0.00 V both ways</td>
-          <td>Permanent short between C and E</td>
-        </tr>
-      </table>
+        <h3>9. Conclusion</h3>
+        <p>
+          The Transistor Tester Simulator meets the objective of converting a standard
+          transistor-testing lab experiment into an interactive, gamified web application.
+          It strengthens understanding of BJT structure, multimeter usage and basic
+          troubleshooting techniques, and can be further extended with more device models
+          (e.g., diodes, FETs, op-amps) in future.
+        </p>
 
-      <p style="font-size:11px; color:#9ca3af; margin-top:6px;">
-        This simulator mimics multimeter diode-test behaviour for both healthy and faulty BJTs,
-        and can be directly linked to your practical on transistor identification and fault finding.
-      </p>
-    </div>
-  </div>
+        <h3>10. Future Scope</h3>
+        <ul>
+          <li>Add support for different transistor packages and datasheet lookup.</li>
+          <li>Include more fault types (leakage, partial shorts, noisy junctions).</li>
+          <li>Extend simulator to cover other components like diodes and MOSFETs.</li>
+          <li>Store user scores / attempts for assessment and analytics.</li>
+        </ul>
+      </div>
+    </div> <!-- end simContainer -->
+  </div> <!-- end app-wrapper -->
 
 
   <!-- JAVASCRIPT LOGIC -->
   <script>
     let t = {};
     let totalScore = 0;
+
+    function startSimulation() {
+      const sim = document.getElementById("simContainer");
+      sim.style.display = "block";
+      sim.scrollIntoView({ behavior: "smooth" });
+      // ensure a transistor is ready
+      if (!window._simInit) {
+        newTransistor();
+        window._simInit = true;
+      }
+    }
+
+    function openReport() {
+      const sim = document.getElementById("simContainer");
+      sim.style.display = "block";
+      if (!window._simInit) {
+        newTransistor();
+        window._simInit = true;
+      }
+      const report = document.getElementById("report");
+      report.scrollIntoView({ behavior: "smooth" });
+    }
 
     function newTransistor() {
       const mode = document.getElementById("mode").value;
@@ -507,14 +666,15 @@
         fault: fault
       };
 
-      document.getElementById("reading").textContent = "--";
-      document.getElementById("feedback").textContent = "";
-      document.getElementById("roundScore").querySelector("span").textContent = "0";
+      const reading = document.getElementById("reading");
+      if (reading) reading.textContent = "--";
+      const fb = document.getElementById("feedback");
+      if (fb) fb.textContent = "";
+      const rs = document.getElementById("roundScore");
+      if (rs) rs.querySelector("span").textContent = "0";
 
-      // clear pin highlights
       clearPinHighlights();
-
-      console.log("Hidden transistor:", t); // for testing / viva
+      console.log("Hidden transistor:", t);
     }
 
     function role(pin) {
@@ -526,8 +686,9 @@
     function clearPinHighlights() {
       for (let i = 1; i <= 3; i++) {
         const el = document.getElementById("pin" + i);
-        el.classList.remove("pin-pos");
-        el.classList.remove("pin-neg");
+        if (el) {
+          el.classList.remove("pin-pos", "pin-neg");
+        }
       }
     }
 
@@ -540,8 +701,12 @@
     }
 
     function takeReading() {
-      const pos = Number(document.getElementById("pos").value);
-      const neg = Number(document.getElementById("neg").value);
+      const posSel = document.getElementById("pos");
+      const negSel = document.getElementById("neg");
+      if (!posSel || !negSel) return;
+
+      const pos = Number(posSel.value);
+      const neg = Number(negSel.value);
 
       animatePins(pos, neg);
 
@@ -549,23 +714,16 @@
       const negR = role(neg);
       let result = "OL";
 
-      // same pin
       if (pos === neg) {
         result = "0.00 (same pin)";
-      }
-      // FAULT: C–E short
-      else if (
+      } else if (
         t.fault === "short_ce" &&
         ((posR === "C" && negR === "E") || (posR === "E" && negR === "C"))
       ) {
         result = "0.00 V";
-      }
-      // FAULT: open base
-      else if (t.fault === "open_base" && (posR === "B" || negR === "B")) {
+      } else if (t.fault === "open_base" && (posR === "B" || negR === "B")) {
         result = "OL";
-      }
-      // normal behaviour
-      else {
+      } else {
         if (t.type === "NPN" && posR === "B" && (negR === "C" || negR === "E")) {
           result = "0.70 V";
         }
@@ -574,18 +732,27 @@
         }
       }
 
-      document.getElementById("reading").textContent = result;
+      const reading = document.getElementById("reading");
+      if (reading) reading.textContent = result;
     }
 
     function checkAnswer() {
       let score = 0;
       let msg = "";
 
-      const gType  = document.getElementById("typeGuess").value;
-      const gBase  = Number(document.getElementById("baseGuess").value);
-      const gCol   = Number(document.getElementById("collectorGuess").value);
-      const gEmi   = Number(document.getElementById("emitterGuess").value);
-      const gFault = document.getElementById("faultGuess").value;
+      const typeSel  = document.getElementById("typeGuess");
+      const baseSel  = document.getElementById("baseGuess");
+      const colSel   = document.getElementById("collectorGuess");
+      const emiSel   = document.getElementById("emitterGuess");
+      const faultSel = document.getElementById("faultGuess");
+
+      if (!typeSel || !baseSel || !colSel || !emiSel || !faultSel) return;
+
+      const gType  = typeSel.value;
+      const gBase  = Number(baseSel.value);
+      const gCol   = Number(colSel.value);
+      const gEmi   = Number(emiSel.value);
+      const gFault = faultSel.value;
 
       if (gType === t.type) score += 20;
       else msg += "Wrong TYPE.\n";
@@ -601,16 +768,17 @@
 
       totalScore += score;
 
-      document.getElementById("roundScore").querySelector("span").textContent = score;
-      document.getElementById("totalScore").querySelector("span").textContent = totalScore;
+      const rs = document.getElementById("roundScore");
+      const ts = document.getElementById("totalScore");
+      if (rs) rs.querySelector("span").textContent = score;
+      if (ts) ts.querySelector("span").textContent = totalScore;
 
       msg += `\nCorrect: type=${t.type}, B=${t.base}, C=${t.collector}, E=${t.emitter}, fault=${t.fault}`;
-      document.getElementById("feedback").textContent = msg;
+      const fb = document.getElementById("feedback");
+      if (fb) fb.textContent = msg;
     }
-
-    // start first transistor
-    newTransistor();
   </script>
 
 </body>
 </html>
+
